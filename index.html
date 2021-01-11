@@ -1,1 +1,217 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="/favicon.ico"><title>picscos</title><link href="/css/app.808f712d.css" rel="preload" as="style"><link href="/css/chunk-vendors.a783d5cc.css" rel="preload" as="style"><link href="/js/app.12897e39.js" rel="preload" as="script"><link href="/js/chunk-vendors.fcc7a7f5.js" rel="preload" as="script"><link href="/css/chunk-vendors.a783d5cc.css" rel="stylesheet"><link href="/css/app.808f712d.css" rel="stylesheet"></head><body><noscript><strong>We're sorry but picscos doesn't work properly without JavaScript enabled. Please enable it to continue.</strong></noscript><div id="app"></div><script src="/js/chunk-vendors.fcc7a7f5.js"></script><script src="/js/app.12897e39.js"></script></body></html>
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>Telegram Image Search 图片检索</title>
+    <link rel="stylesheet" href="./static/build/css/layui.css">
+    <script src="./static/build/vue"></script>
+    <script src="./static/build/cos-js-sdk-v5.min.js"></script>
+    <script src="./static/build/moment.min.js"></script>
+    <script src="./static/build/jquery.min.js"></script>
+</head>
+
+<body>
+    <ul class="layui-nav" lay-filter="">
+        <li class="layui-nav-item"><i class="layui-icon layui-icon-release"
+                style="font-size: 30px; color: #1E9FFF;"></i> </li>
+        <li class="layui-nav-item" style="padding-left: 15px; font-size: 15px; font-style: italic; font-weight: bold;">
+            Telegram Image Search 图片检索</li>
+    </ul>
+    <blockquote class="layui-elem-quote">检索图片是否曾经在Telegram中发送过</blockquote>
+    <div class="layui-anim layui-anim-rotate" style="text-align: center;">
+        <img id="image" src='./assert/icon.png' width="50%" height="50%">
+    </div>
+
+    <table class="layui-table" id="app">
+        <colgroup>
+            <col width="150">
+            <col width="200">
+            <col>
+        </colgroup>
+        <thead>
+            <tr>
+                <th>群组</th>
+                <th>时间</th>
+                <th>用户</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr v-for="item in items" :key="item.id">
+                <td>{{ item.group }}</td>
+                <td>{{ item.time }}</td>
+                <td>{{ item.user }}</td>
+            </tr>
+        </tbody>
+    </table>
+    <div style="text-align: center;">
+        <br>
+        <button type="button" class="layui-btn" id="test1">
+            <i class="layui-icon">&#xe67c;</i>检索图片
+        </button>
+    </div>
+    <br>
+    <br>
+    <fieldset class="layui-elem-field">
+        <legend style="font-size: 15px;">检索图片是否来自Telegram图片库</legend>
+        <div class="layui-field-box">
+            原理:通过Telegram数据接口将所有的群组图片数据储存至云端计算集群，然后再通过图片对比，得出匹配的数据，从而得出该图片最早发送于群组的时间以及用户昵称
+        </div>
+    </fieldset>
+
+
+    <ul class="layui-timeline">
+        <li class="layui-timeline-item">
+            <i class="layui-icon layui-timeline-axis">&#xe63f;</i>
+            <div class="layui-timeline-content layui-text">
+                <h3 class="layui-timeline-title">12月18日</h3>
+                <p>
+                    增加了更多的群组数据抓取
+                </p>
+            </div>
+        </li>
+        <li class="layui-timeline-item">
+            <i class="layui-icon layui-timeline-axis">&#xe63f;</i>
+            <div class="layui-timeline-content layui-text">
+                <h3 class="layui-timeline-title">8月16日</h3>
+                <p> 优化图片检索</p>
+
+            </div>
+        </li>
+        <li class="layui-timeline-item">
+            <i class="layui-icon layui-timeline-axis">&#xe63f;</i>
+            <div class="layui-timeline-content layui-text">
+                <h3 class="layui-timeline-title">7月15日</h3>
+                <p>
+                    优化图片特征储存
+                </p>
+            </div>
+        </li>
+        <li class="layui-timeline-item">
+            <i class="layui-icon layui-timeline-axis">&#xe63f;</i>
+            <div class="layui-timeline-content layui-text">
+                <div class="layui-timeline-title">开始</div>
+            </div>
+        </li>
+    </ul>
+    <script src="./static/build/layui.all.js"></script>
+    <script>
+        var app = new Vue({
+            el: '#app',
+            data: {
+                items: []
+            },
+            mounted: function () {
+                layui.use('upload', function () {
+                    var upload = layui.upload;
+                    //执行实例
+                    var uploadInst = upload.render({
+                        elem: '#test1'
+                        , auto: false //选择文件后不自动上传
+                        , choose: function (obj) {
+                            //将每次选择的文件追加到文件队列
+                            var files = obj.pushFile();
+
+                            //预读本地文件，如果是多文件，则会遍历。(不支持ie8/9)
+                            obj.preview(function (index, file, result) {
+                                console.log(index); //得到文件索引
+                                console.log(file); //得到文件对象
+                                console.log(result); //得到文件base64编码，比如图片
+
+                                var r = new FileReader();
+                                r.readAsDataURL(file);
+                                $(r).load(function () {
+                                    $('#image').attr("src", this.result);
+                                })
+
+                                app.afterRead(file)
+                            });
+                        }
+                    });
+                });
+                //一般直接写在一个js文件中
+                layui.use(['layer', 'form'], function () {
+                    var layer = layui.layer
+                        , form = layui.form;
+                    //layer.tips('检测到图片的聊天记录', '#image', { tips: [4, '#FF0000'], time: 9000 });
+                    // layer.msg('Hello World');
+                });
+                this.randominfo();
+            }, methods: {
+                afterRead(file) {
+                    var d = new Date();
+                    var timekey = "";
+                    timekey += d.getFullYear() + "-"; //获取当前年份
+                    timekey += d.getMonth() + 1 + "-"; //获取当前月份（0——11）
+                    timekey += d.getDate();
+
+                    var cos = new COS({
+                        SecretId: "AKIDZsyylMOk7HCwTlmCrKagOv8XhssMCbP4",
+                        SecretKey: "oMlvUVT7Zx9lvtkLjrjQT8apoZ5LNBk6",
+                    });
+                    cos.putObject(
+                        {
+                            Bucket: "tencentcos-1304638951" /* 必须 */,
+                            Region: "ap-nanjing" /* 存储桶所在地域，必须字段 */,
+                            Key:
+                                timekey +
+                                "/" +
+                                Math.ceil(Math.random() * 1000) +
+                                file.name /* 必须 */,
+                            StorageClass: "STANDARD",
+                            Body: file, // 上传文件对象
+                            onProgress: function (progressData) {
+                                layer.msg('上传成功，请稍等');
+                            },
+                        },
+                        function (err, data) {
+                            console.log(err || data);
+                            layer.msg('处理成功');
+                        }
+                    );
+                },
+                randominfo() {
+
+                    var index = Math.ceil(Math.random() * 4) - 1;
+                    console.log(index)
+                    for (var i = 0; i < index; i++) {
+                        var group = "****";
+                        var user = Math.random().toString(36).substr(2, 2) + "*******" + Math.random().toString(36).substr(2, 1);
+                        var time = ConsoleRandomDate()
+                        this.items.push({ id: i, group: group, time: time, user: user })
+                    }
+                    if (index != 0) {
+                        layer.tips('检测到图片的聊天记录', '#image', { tips: [4, '#FF0000'], time: 9000 });
+                    }
+                }
+            },
+        })
+
+        function ConsoleRandomDate() {
+            var maxdaterandom = new Date().getTime();
+            // 由于当前环境为北京GMT+8时区，所以与GMT有8个小时的差值
+            var mindaterandom = new Date(2015, 0, 1, 8).getTime();
+            var randomdate = getRandom(mindaterandom, maxdaterandom);
+            var datestr = moment(randomdate).format("YYYY-MM-DD HH:mm:ss");
+            return datestr;
+        }
+
+
+        function getRandom(min, max) {
+            min = Math.ceil(min);
+            max = Math.floor(max);
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+
+        function getRandomChineseWord() {
+            var _rsl = "";
+            var _randomUniCode = Math.floor(Math.random() * (40870 - 19968) + 19968).toString(16);
+            eval("_rsl=" + '"\\u' + _randomUniCode + '"');
+            return _rsl;
+        }
+    </script>
+</body>
+
+</html>
